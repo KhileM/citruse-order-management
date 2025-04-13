@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  app:
+    image: laravelphp/php-fpm   # A simple PHP-FPM base image
+    container_name: laravel-app
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - app-network
+    depends_on:
+      - db
+
+  webserver:
+    image: nginx:alpine
+    container_name: nginx-webserver
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - app-network
+    depends_on:
+      - app
+
+  db:
+    image: postgres:14
+    container_name: postgres-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: citruse_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yourpassword
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
